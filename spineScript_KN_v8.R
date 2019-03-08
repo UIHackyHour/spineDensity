@@ -42,16 +42,15 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   df$is_it_3clustered <- as.numeric(df$nn2_dist<df$exp_nn)
   df$is_it_4clustered <- as.numeric(df$nn3_dist<df$exp_nn)
   dendrite_ac <- agn$ac # defines agglomeration coefficent of the dendrite
-  
-  # possible <- seq(1,total_length, by=.01) # create 'list'soma_distances' from 1:total_length by 0.01 increments to pull from, all possible positions on the dendrite?
+
   ac <- list() #initializes list for ac's from next for loop
-  for(j in 1:5000){
-    test_data <- data.frame(sample(df$X), sample(df$Y), sample(df$Z))# take a sample from all possible locations on dendrite to match total number of spines
+  for(j in 1:15000){
+    test_data <- data.frame(sample(df$X), sample(df$Y), sample(df$Z)) # randomize the X's, Y's, and Z's to make a "biologically plausible" dataframe.
     test_dist <- as.matrix(dist(test_data)) #creates distance matrix for random sample
     assign("test_cluster", agnes(test_data,metric = "euclidean", method = "average")) #runs UPGMA on sample and labels the agn output "test_cluster"
     ac <- rbind(ac,test_cluster$ac) # add row to ac using the 'test_cluster' ac
   }  
-  cScore <- sum(as.numeric(ac<dendrite_ac))/5000 # average (divide by 5000 samples) how many times random ac is smaller than dendrite_ac, the smaller the value, the more "clustering"
+  cScore <- sum(as.numeric(ac<dendrite_ac))/15000 # average (divide by 15000 samples) how many times random ac is smaller than dendrite_ac, the smaller the value, the more "clustering"
   df$c_score <- cScore #add a row to df with the cScore of the dendrite
   df$density_overall <- density_overall # add these data to df
   df$density_mushroom <- density_mushroom
