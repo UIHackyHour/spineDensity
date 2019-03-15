@@ -86,10 +86,10 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   num_clusters_1D <- sum(cluster_freq_1D$is_clustered) #count how many clusters are on this segment
   spines_in_cluster_1D <- cluster_freq_1D %>% group_by(is_clustered) %>% summarise(num_clus_spines_1D = sum(Freq)) # count how many spines are in the true clusters (>1 spines) and how many are not
   spines_clustered_1D <- list() #initialize list for number of spines that are clustered
-  spines_clustered_1D <- rbind(spines_clustered_1D, spines_in_cluster_1D[1,2]) #add number of spines clustered to list
+  spines_clustered_1D <- rbind(spines_clustered_1D, spines_in_cluster_1D[2,2]) #add number of spines clustered to list
   spines_clustered_1D <- as.matrix(spines_clustered_1D) #converts # of spines clustered to matrix
   spines_clustered_1D <- as.numeric(spines_clustered_1D) #converts to numerical form
-  
+  spines_clustered_1D[is.na(spines_clustered_1D)] <- 0
   spines_not_1D <- as.numeric(total_spines - spines_clustered_1D) #define and calculate number of spines not clustered (total spines minus number of spines clustered)
   
   test_spines_clustered_all_1D <- data.frame() #initialize dataframe to contain # of spines in a cluster for all random samples
@@ -123,11 +123,12 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   
   std_test_1D <- sd(test_spines_clustered_all_1D) #generates STD of total number of spines clustered in entire random sample
   mean_test_1D <- mean(test_spines_clustered_all_1D) #generates average number of spines in a cluster in random data
+ 
   curve_dnorm_1D <- dnorm(test_spines_clustered_all_1D, mean_test_1D, std_test_1D) #gives probability density function, or height of probability distribution at each point(height = frequency)
   std_curve_1D <- sd(curve_dnorm_1D)
   mean_curve_1D <- mean(curve_dnorm_1D)
   
-  Cscore_1D <- pnorm(spines_clustered_1D, mean_curve_1D, sd=sqrt(std_curve_1D)) #calculates the probability that given the random sample distribution (curve mean+SD) the total number of spines observed is higher
+  Cscore_1D <- pnorm(spines_clustered_1D, mean_test_1D, std_test_1D) #calculates the probability that given the random sample distribution (curve mean+SD) the total number of spines observed is higher
   #therefore, the closer to 1, higher probability that a given number has more clustered spines than the random normal distribution and vice versa
   
  # add all 1D data to all data 
@@ -154,7 +155,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   num_clusters_3D <- sum(cluster_freq_3D$is_clustered) #count how many 1s to determine how many clusters (spines > 1) in the segment
   spines_in_cluster_3D <- cluster_freq_3D %>% group_by(is_clustered) %>% summarise(num_clus_spines_3D = sum(Freq))
   spines_clustered_3D <- list()
-  spines_clustered_3D <- rbind(spines_clustered_3D, spines_in_cluster_3D[1,2])
+  spines_clustered_3D <- rbind(spines_clustered_3D, spines_in_cluster_3D[2,2])
   spines_clustered_3D <- as.matrix(spines_clustered_3D) #conerts num of spines clustered to matrix
   spines_clustered_3D <- as.numeric(spines_clustered_3D) #converts to numerical form
   
@@ -205,7 +206,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   std_curve_3D <- sd(curve_dnorm_3D)
   mean_curve_3D <- mean(curve_dnorm_3D)
   
-  Cscore_3D <- pnorm(spines_clustered_3D, mean_curve_3D, std_curve_3D)
+  Cscore_3D <- pnorm(spines_clustered_3D, mean_test_3D, std_test_3D)
 
 
   # add 3D data to data frame
