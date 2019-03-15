@@ -60,14 +60,14 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   ac_test <- list() #initializes list for ac's from next for loop  
   possible_dist <- seq(1,total_length, by=0.01) # create list of possible soma distances by 0.01 increments to pull from
   
-   for(k in 1:1000){
+   for(k in 1:5000){
     test_data <- sample(possible_dist, total_spines) # take a sample from all possible locations on dendrite to match total number of spines
     test_dist <- as.matrix(dist(test_data)) #creates distance matrix for random sample
     assign("test_cluster", agnes(test_data,metric = "euclidean", method = "average")) #runs UPGMA on sample and labels the agn output "test_cluster"
     ac_test <- rbind(ac_test,test_cluster$ac) # add row to ac using the 'test_cluster' ac
   } 
   
-  cScore_ac_1D <- sum(as.numeric(ac_test<dendrite_ac))/1000 # average (divide by 1000 samples) how many times random ac is smaller than dendrite_ac, the smaller the value, the more "clustering"
+  cScore_ac_1D <- sum(as.numeric(ac_test<dendrite_ac))/5000 # average (divide by 1000 samples) how many times random ac is smaller than dendrite_ac, the smaller the value, the more "clustering"
   df$c_score_ac_1D <- cScore_ac_1D #add a row to df with the cScore of the dendrite
 #end Shane's original analysis
   
@@ -96,7 +96,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   test_num_clusters_all_1D <- data.frame()
   
 # 1D random spines for-loop
-  for(j in 1:100){
+  for(j in 1:500){
     random_spines_1D <- sample(possible_dist, total_spines) # take a sample from all possible locations on dendrite to match total number of spines
     test_dist_1D <- as.matrix(dist(random_spines_1D)) #creates distance matrix for random sample
     UPGMA_test_1D <- IdClusters(test_dist_1D, method="UPGMA", cutoff=0.75, showPlot=FALSE) #runs UPGMA with cutoff (same as with obsv but with random sample)
@@ -108,7 +108,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
     cluster_freq_test_1D$is_clustered <- as.numeric(cluster_freq_test_1D$Freq > 1) #ask whether cluster has >1 spines in it (1 for yes, 0 for no)
     num_clusters_test_1D <- sum(cluster_freq_test_1D$is_clustered) # add how many 1s (or how many clusters have >1 spines) to get true number of clusters
     num_clusters_test_1D[is.na(num_clusters_test_1D)] <- 0 #changes possible NA from 0 clusters to 0
-    test_num_clusters_all <- rbind(test_num_clusters_all, num_clusters_test_1D) #adds total number of clusters to running list
+    test_num_clusters_all_1D <- rbind(test_num_clusters_all_1D, num_clusters_test_1D) #adds total number of clusters to running list
     spines_in_cluster_test_1D <- cluster_freq_test_1D %>% group_by(is_clustered) %>% summarise(num_clusters_test_1D = sum(Freq)) #count how many spines that are in a true cluster or not
     spines_clustered_test_1D <- spines_in_cluster_test_1D[2,2] # define how many spines are in a cluster
     spines_not_test_1D <- as.numeric(total_spines - spines_clustered_test_1D) # calculate how many spines are not clustered
@@ -196,8 +196,8 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
     
   } # end of random spines 3D for-loop
   
-  test_spines_clustered_all_3D <- as.matrix(test_spines_clustered_all_3D)
-  test_spines_clustered_all_3D <- as.numeric(test_spines_clustered_all_3D)
+  test_spines_clustered_all_3D <- as.numeric(as.matrix(test_spines_clustered_all_3D))
+
   
   std_test_3D <- sd(test_spines_clustered_all_3D)
   mean_test_3D <- mean(test_spines_clustered_all_3D)
@@ -205,7 +205,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   std_curve_3D <- sd(curve_dnorm_3D)
   mean_curve_3D <- mean(curve_dnorm_3D)
   
-  Cscore_3D <- pnorm(spines_clustered_3D, mean_curve_3D, sd=sqrt(std_curve_3D))
+  Cscore_3D <- pnorm(spines_clustered_3D, mean_curve_3D, std_curve_3D)
 
 
   # add 3D data to data frame
