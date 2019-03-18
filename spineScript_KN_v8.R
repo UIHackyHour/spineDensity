@@ -31,8 +31,8 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   density_mushroom <- sum(as.numeric(df$TYPE=="mushroom"))/total_length  # counts the number of "mushroom" rows and divides by length for mushroom density
   density_thin <- sum(as.numeric(df$TYPE=="thin"))/total_length  # same as above, with "thin"
   density_stubby <- sum(as.numeric(df$TYPE=="stubby"))/total_length # same as above, with "stubby"
-  agn <- agnes(df$SOMA_DISTANCE,metric = "euclidean", method = "average") # runs the agnes, computes agglomerative hierarchical clustering, "average" = UPGMA
-  dist <- as.matrix(dist(df$SOMA_DISTANCE)) # creates a distance matrix of soma distance
+  agn <- agnes(df[c("X", "Y", "Z")], metric = "euclidean", method = "average") # runs the agnes, computes agglomerative hierarchical clustering, "average" = UPGMA
+  dist <- as.matrix(dist(df[c("X", "Y", "Z")])) # creates a distance matrix of soma distance
   df$nn_dist <- apply(dist,2, function(x) sort(x)[2])   # finds nearest neighbor for each spine
   df$nn2_dist <- apply(dist,2, function(x) sort(x)[3])  # finds second nearest neighbor
   df$nn3_dist <- apply(dist,2, function(x) sort(x)[4])  # finds third
@@ -47,7 +47,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   for(j in 1:15000){
     test_data <- data.frame(sample(df$X), sample(df$Y), sample(df$Z)) # randomize the X's, Y's, and Z's to make a "biologically plausible" dataframe.
     test_dist <- as.matrix(dist(test_data)) #creates distance matrix for random sample
-    assign("test_cluster", agnes(test_data,metric = "euclidean", method = "average")) #runs UPGMA on sample and labels the agn output "test_cluster"
+    assign("test_cluster", agnes(test_data, metric = "euclidean", method = "average")) #runs UPGMA on sample and labels the agn output "test_cluster"
     ac <- rbind(ac,test_cluster$ac) # add row to ac using the 'test_cluster' ac
   }
   # mean density of the simulation
