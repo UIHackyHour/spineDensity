@@ -46,7 +46,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   density_stubby <- sum(as.numeric(df$TYPE=="stubby"))/total_length # same as above, with "stubby"
   df <- df[order(df$SOMA_DISTANCE),]  #order data by column SOMA_DISTANCE so that coordinates pulled are in spine attachment order
   
-  data_coords <- data.frame(df$X, df$Y, df$Z) # creates data frame with spine head coordinates
+data_coords <- df[c("X", "Y", "Z")] # creates data frame with spine head coordinates
 
 # Shane's original clustering analysis using spine attachment distance from soma  
     
@@ -86,7 +86,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   num_clusters_1D <- sum(cluster_freq_1D$is_clustered) #count how many clusters are on this segment
   spines_in_cluster_1D <- cluster_freq_1D %>% group_by(is_clustered) %>% summarise(num_clus_spines_1D = sum(Freq)) # count how many spines are in the true clusters (>1 spines) and how many are not
   spines_clustered_1D <- list() #initialize list for number of spines that are clustered
-  spines_clustered_1D <- rbind(spines_clustered_1D, spines_in_cluster_1D[2,2]) #add number of spines clustered to list
+  spines_clustered_1D <- spines_in_cluster_1D[[2,2]] #add number of spines clustered to list
   spines_clustered_1D <- as.matrix(spines_clustered_1D) #converts # of spines clustered to matrix
   spines_clustered_1D <- as.numeric(spines_clustered_1D) #converts to numerical form
   spines_clustered_1D[is.na(spines_clustered_1D)] <- 0
@@ -142,7 +142,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   
   
 # 3D clustering analysis  
-  dist_3D <- as.matrix(dist.xyz(data_coords)) # creates distance matrix of spine head coordinates
+  dist_3D <- as.matrix(dist(data_coords, diag=TRUE, upper=TRUE)) # creates distance matrix of spine head coordinates
   UPGMA_obsv_3D <- IdClusters(dist_3D, method = "UPGMA", cutoff=0.75, showPlot=TRUE) #run cluster analysis with cutoff used in Yadav paper
   #gives cluster number associated with which spine (i.e. spines 25 and 26 are in cluster 1)
   UPGMA_obsv_3D$rn <- rownames(UPGMA_obsv_3D)   #adds a column with rownows to keep spine ID, not sure if this step is neccessary
