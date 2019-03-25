@@ -37,7 +37,12 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
   df <- df[complete.cases(df$RAYBURST_VOLUME),] # removes cases where there is no data
   df <- df[complete.cases(df$MAX_DTS),] # removes cases where there is no  data
   df$file <- fileName # adds a column with repeated information about which file that spine came from
-  total_length <- df %>% group_by(SECTION_NUMBER)  %>% summarise(section_length=max(SECTION_LENGTH)) %>%ungroup() %>% summarise(total_length=sum(section_length)) %>% as.double() #this uses the dplyr package to take the data.frame and group it by section. Then it finds the length of each section before adding them all together
+  total_length <- df %>% 
+    group_by(SECTION_NUMBER)  %>% 
+    summarise(section_length=max(SECTION_LENGTH)) %>%
+    ungroup() %>% 
+    summarise(total_length=sum(section_length)) %>% 
+    as.double() #this uses the dplyr package to take the data.frame and group it by section. Then it finds the length of each section before adding them all together
   total_spines <- as.numeric(nrow(df)) # number of rows = number of spines
   density_overall <- total_spines/total_length  # calculate density of segment
   density_mushroom <- sum(as.numeric(df$TYPE=="mushroom"))/total_length  # counts the number of "mushroom" rows and divides by length for mushroom density
@@ -49,7 +54,7 @@ for(i in 1:length(fileList)){  ##add back in 'i' when adding for loop back in
 
 # Shane's original clustering analysis using spine attachment distance from soma  
     
-  agn <- agnes(df$SOMA_DISTANCE,metric = "euclidean", method = "average") # runs the agnes, computes agglomerative hierarchical clustering, "average" = UPGMA
+ # agn <- agnes(df$SOMA_DISTANCE,metric = "euclidean", method = "average") # runs the agnes, computes agglomerative hierarchical clustering, "average" = UPGMA
   dist_ac <- as.matrix(dist(df$SOMA_DISTANCE))  #creates a distance matrix of soma distances
   df$nn_dist_ac <- apply(dist_ac,2, function(x) sort(x)[2])   # finds nearest neighbor for each spine
   df$nn2_dist_ac <- apply(dist_ac,2, function(x) sort(x)[3])  # finds second nearest neighbor
@@ -242,24 +247,114 @@ data_all$animal_num <- lapply(data_all$animal_num, function(x) unlist(strsplit(x
 data_all$RAYBURST_VOLUME <- as.numeric(data_all$RAYBURST_VOLUME)
 data_all$MAX_DTS <- as.numeric(data_all$MAX_DTS)
 
+
+
 n <- readline(prompt="Enter group name:") # gives prompt on console to enter animal group
 data_all$group <- n # adds the group to the master data file
 
 data_all$animal_num <- unlist(data_all$animal_num) #changes animal number to a vector rather than a list, which is important for executing the following task
 data_all$PDB <- unlist(data_all$PDB) # same as above
 
-TYPE_ave <- data_all %>% group_by(group, animal_num, retro_label, TYPE) %>% summarise(Cscore_1D = mean(c_score_1D), nn_1D = mean(nn_dist_1D), nn2_1D = mean(nn2_dist_1D), nn3_1D = mean(nn3_dist_1D), Cscore_3D = mean(c_score_3D), nn_3D = mean(nn_dist_3D), nn2_3D = mean(nn2_dist_3D), nn3_3D = mean(nn3_dist_3D), density_overall = mean(density_overall), density_mushroom = mean(density_mushroom), density_thin = mean(density_thin), density_stubby = mean(density_stubby), spine_vol_overall = mean(RAYBURST_VOLUME, na.rm = TRUE), spine_length_overall = mean(MAX_DTS, na.rm = TRUE))
-PDB_TYPE_ave <- data_all %>% group_by(group, animal_num, stack, retro_label, PDB, TYPE) %>% summarise(Cscore_1D = mean(c_score_1D), nn_1D = mean(nn_dist_1D), nn2_1D = mean(nn2_dist_1D), nn3_1D = mean(nn3_dist_1D), Cscore_3D = mean(c_score_3D), nn_3D = mean(nn_dist_3D), nn2_3D = mean(nn2_dist_3D), nn3_3D = mean(nn3_dist_3D), density_overall = mean(density_overall), density_mushroom = mean(density_mushroom), density_thin = mean(density_thin), density_stubby = mean(density_stubby), spine_vol_overall = mean(RAYBURST_VOLUME, na.rm = TRUE), spine_length_overall = mean(MAX_DTS, na.rm = TRUE))
+data_all_by_file <- data_all %>% 
+  group_by(file) %>% 
+  summarise(num_clusters_3D = mean(num_clusters_3D), 
+            spines_clustered_3D = mean(spines_clustered_3D), 
+            spines_not_3D = mean(spines_not_3D), 
+            Cscore_3D = mean(Cscore_3D), 
+            density_overall = mean(density_overall), 
+            density_mushroom = mean(density_mushroom), 
+            density_thin = mean(density_thin), 
+            density_stubby = mean(density_stubby))
 
-PDB_ave <- data_all %>% group_by(group, animal_num, retro_label, PDB) %>% summarise(Cscore_1D = mean(c_score_1D), nn_1D = mean(nn_dist_1D), nn2_1D = mean(nn2_dist_1D), nn3_1D = mean(nn3_dist_1D), Cscore_3D = mean(c_score_3D), nn_3D = mean(nn_dist_3D), nn2_3D = mean(nn2_dist_3D), nn3_3D = mean(nn3_dist_3D), density_overall = mean(density_overall), density_mushroom = mean(density_mushroom), density_thin = mean(density_thin), density_stubby = mean(density_stubby), spine_vol_overall = mean(RAYBURST_VOLUME, na.rm = TRUE), spine_length_overall = mean(MAX_DTS, na.rm = TRUE))
-# ^first groups by treatment group, then by animal, then by day of image (i.e. -F), then by dendrite location
-# summarise then finds averages for each group for all various pieces of data
 
-animal_ave <- data_all %>% group_by(group, animal_num) %>% summarise(Cscore_1D = mean(c_score_1D), nn_1D = mean(nn_dist_1D), nn2_1D = mean(nn2_dist_1D), nn3_1D = mean(nn3_dist_1D), Cscore_3D = mean(c_score_3D), nn_3D = mean(nn_dist_3D), nn2_3D = mean(nn2_dist_3D), nn3_3D = mean(nn3_dist_3D), density_overall = mean(density_overall), density_mushroom = mean(density_mushroom), density_thin = mean(density_thin), density_stubby = mean(density_stubby), spine_vol_overall = mean(RAYBURST_VOLUME, na.rm = TRUE), spine_length_overall = mean(MAX_DTS, na.rm = TRUE))
-# groups by treatment then animal, then finds averages per animal for various data
+data_all_by_file$animal_num <- lapply(data_all_by_file$file, function(x) unlist(strsplit(x, "-"))[2]) # this pulls out an animal number from the file number
+data_all_by_file$retro_label <- substring(data_all_by_file$animal_num, nchar(data_all_by_file$animal_num), nchar(data_all_by_file$animal_num))  #pulls off 'L' or 'N' from ID to indicate whether cell was retro-gradely labeled
+data_all_by_file$PDB <- lapply(data_all_by_file$file, function(x) unlist(strsplit(x, "-"))[3]) # pulls dendrite location out of name and adds column
+data_all_by_file$PDB <- replace(data_all_by_file$PDB, data_all_by_file$PDB=="b", "basal")
+data_all_by_file$PDB <- replace(data_all_by_file$PDB, data_all_by_file$PDB=="p", "prox")
+data_all_by_file$PDB <- replace(data_all_by_file$PDB, data_all_by_file$PDB=="d", "dist")
+data_all_by_file$PDB <- replace(data_all_by_file$PDB, data_all_by_file$PDB=="b", "basal")
+data_all_by_file$PDB <- replace(data_all_by_file$PDB, data_all_by_file$PDB=="p", "prox")
+data_all_by_file$PDB <- replace(data_all_by_file$PDB, data_all_by_file$PDB=="d", "dist")
+data_all_by_file$retro_label <- replace(data_all_by_file$retro_label, data_all_by_file$retro_label=="L", "labeled") 
+data_all_by_file$retro_label <- replace(data_all_by_file$retro_label, data_all_by_file$retro_label=="N", "not labeled")
+data_all_by_file$stack <- lapply(data_all_by_file$file, function(x) unlist(strsplit(x, "-"))[4]) #gives letter ID of different imaging days
+data_all_by_file$stack <- unlist(data_all_by_file$stack)
+data_all_by_file$animal_num <- lapply(data_all_by_file$animal_num, function(x) unlist(strsplit(x, "L"))[1]) #removes letter from behind animal ID name
+data_all_by_file$animal_num <- lapply(data_all_by_file$animal_num, function(x) unlist(strsplit(x, "N"))[1])
+data_all_by_file$group <- n
+data_all_by_file$animal_num <- unlist(data_all_by_file$animal_num) #changes animal number to a vector rather than a list, which is important for executing the following task
+data_all_by_file$PDB <- unlist(data_all_by_file$PDB)
 
-labeled_ave <- data_all %>% group_by(group, animal_num, retro_label) %>% summarise(Cscore_1D = mean(c_score_1D), nn_1D = mean(nn_dist_1D), nn2_1D = mean(nn2_dist_1D), nn3_1D = mean(nn3_dist_1D), Cscore_3D = mean(c_score_3D), nn_3D = mean(nn_dist_3D), nn2_3D = mean(nn2_dist_3D), nn3_3D = mean(nn3_dist_3D), density_overall = mean(density_overall), density_mushroom = mean(density_mushroom), density_thin = mean(density_thin), density_stubby = mean(density_stubby), spine_vol_overall = mean(RAYBURST_VOLUME, na.rm = TRUE), spine_length_overall = mean(MAX_DTS, na.rm = TRUE))
-# groups by treatment then animal, then finds averages per animal for various data
+
+#averages from data_all_by_file (when data is repeated by row for an individual file)
+location_avg_file <- data_all_by_file %>%
+  group_by(group, animal_num, retro_label, PDB) %>% 
+  summarise(num_clusters_3D = mean(num_clusters_3D),
+            spines_clustered_3D = mean(spines_clustered_3D),
+            spines_not_3D = mean(spines_not_3D),
+            Cscore_3D = mean(Cscore_3D),
+            density_overall = mean(density_overall),
+            density_mushroom = mean(density_mushroom),
+            density_thin = mean(density_thin),
+            density_stubby = mean(density_stubby))         
+
+animal_labeled_avg_file <- data_all_by_file %>% 
+  group_by(group, animal_num, retro_label) %>% 
+  summarise(num_clusters_3D = mean(num_clusters_3D),
+            spines_clustered_3D = mean(spines_clustered_3D),
+            spines_not_3D = mean(spines_not_3D),
+            Cscore_3D = mean(Cscore_3D),
+            density_overall = mean(density_overall),
+            density_mushroom = mean(density_mushroom),
+            density_thin = mean(density_thin),
+            density_stubby = mean(density_stubby)) 
+
+#averages from data_all (when each spine/row has a different data point)
+spine_type_avg <- data_all %>% 
+  group_by(group, animal_num, retro_label, TYPE) %>% 
+  summarise(nn_1D = mean(nn_dist_1D), 
+            nn2_1D = mean(nn2_dist_1D), 
+            nn3_1D = mean(nn3_dist_1D), 
+            nn_3D = mean(nn_dist_3D), 
+            nn2_3D = mean(nn2_dist_3D), 
+            nn3_3D = mean(nn3_dist_3D),
+            spine_vol_overall = mean(RAYBURST_VOLUME, na.rm = TRUE), 
+            spine_length_overall = mean(MAX_DTS, na.rm = TRUE))
+
+spine_type_by_location_avg <- data_all %>% 
+  group_by(group, animal_num, stack, retro_label, PDB, TYPE) %>% 
+  summarise(nn_1D = mean(nn_dist_1D), 
+            nn2_1D = mean(nn2_dist_1D), 
+            nn3_1D = mean(nn3_dist_1D), 
+            nn_3D = mean(nn_dist_3D), 
+            nn2_3D = mean(nn2_dist_3D), 
+            nn3_3D = mean(nn3_dist_3D), 
+            spine_vol_overall = mean(RAYBURST_VOLUME, na.rm = TRUE), 
+            spine_length_overall = mean(MAX_DTS, na.rm = TRUE))
+
+location_avg <- data_all %>% 
+  group_by(group, animal_num, retro_label, PDB) %>% 
+  summarise(nn_1D = mean(nn_dist_1D), 
+            nn2_1D = mean(nn2_dist_1D), 
+            nn3_1D = mean(nn3_dist_1D),
+            nn_3D = mean(nn_dist_3D), 
+            nn2_3D = mean(nn2_dist_3D), 
+            nn3_3D = mean(nn3_dist_3D), 
+            spine_vol_overall = mean(RAYBURST_VOLUME, na.rm = TRUE), 
+            spine_length_overall = mean(MAX_DTS, na.rm = TRUE))
+
+animal_labeled_avg <- data_all %>% 
+  group_by(group, animal_num, retro_label) %>% 
+  summarise(nn_1D = mean(nn_dist_1D), 
+            nn2_1D = mean(nn2_dist_1D), 
+            nn3_1D = mean(nn3_dist_1D),
+            nn_3D = mean(nn_dist_3D),
+            nn2_3D = mean(nn2_dist_3D), 
+            nn3_3D = mean(nn3_dist_3D),
+            spine_vol_overall = mean(RAYBURST_VOLUME, na.rm = TRUE), 
+            spine_length_overall = mean(MAX_DTS, na.rm = TRUE))
+
 
 
 
